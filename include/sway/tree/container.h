@@ -51,6 +51,7 @@ struct sway_container_state {
 
 	struct sway_container *focused_inactive_child;
 	bool focused;
+	bool maximized;
 
 	enum sway_container_border border;
 	int border_thickness;
@@ -251,6 +252,9 @@ bool container_has_urgent_child(struct sway_container *container);
  * ends the operation.
  */
 void container_end_mouse_operation(struct sway_container *container);
+
+void container_set_maximized(struct sway_container *con,
+		bool maximized);
 
 void container_set_fullscreen(struct sway_container *con,
 		enum sway_fullscreen_mode mode);

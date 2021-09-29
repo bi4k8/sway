@@ -125,6 +125,9 @@ void container_swap(struct sway_container *con1, struct sway_container *con2) {
 		root_scratchpad_remove_container(con2);
 	}
 
+	bool max1 = con1->pending.maximized;
+	bool max2 = con2->pending.maximized;
+
 	enum sway_fullscreen_mode fs1 = con1->pending.fullscreen_mode;
 	enum sway_fullscreen_mode fs2 = con2->pending.fullscreen_mode;
 	if (fs1) {
@@ -178,6 +181,9 @@ void container_swap(struct sway_container *con1, struct sway_container *con2) {
 			root_scratchpad_show(con1);
 		}
 	}
+
+	container_set_maximized(con2, max1);
+	container_set_maximized(con1, max2);
 
 	if (fs1) {
 		container_set_fullscreen(con2, fs1);

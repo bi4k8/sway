@@ -42,6 +42,7 @@ struct sway_view_impl {
 			int width, int height);
 	void (*set_activated)(struct sway_view *view, bool activated);
 	void (*set_tiled)(struct sway_view *view, bool tiled);
+	void (*set_maximized)(struct sway_view *view, bool maximized);
 	void (*set_fullscreen)(struct sway_view *view, bool fullscreen);
 	void (*set_resizing)(struct sway_view *view, bool resizing);
 	bool (*wants_floating)(struct sway_view *view);
@@ -99,6 +100,7 @@ struct sway_view {
 
 	struct wlr_foreign_toplevel_handle_v1 *foreign_toplevel;
 	struct wl_listener foreign_activate_request;
+	struct wl_listener foreign_maximize_request;
 	struct wl_listener foreign_fullscreen_request;
 	struct wl_listener foreign_close_request;
 	struct wl_listener foreign_destroy;
@@ -132,6 +134,7 @@ struct sway_xdg_shell_view {
 	struct wl_listener commit;
 	struct wl_listener request_move;
 	struct wl_listener request_resize;
+	struct wl_listener request_maximize;
 	struct wl_listener request_fullscreen;
 	struct wl_listener set_title;
 	struct wl_listener set_app_id;

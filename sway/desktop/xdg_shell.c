@@ -174,6 +174,14 @@ static void set_tiled(struct sway_view *view, bool tiled) {
 	wlr_xdg_toplevel_set_tiled(surface, edges);
 }
 
+static void set_maximized(struct sway_view *view, bool maximized) {
+	if (xdg_shell_view_from_view(view) == NULL) {
+		return;
+	}
+	struct wlr_xdg_surface *surface = view->wlr_xdg_surface;
+	wlr_xdg_toplevel_set_maximized(surface, maximized);
+}
+
 static void set_fullscreen(struct sway_view *view, bool fullscreen) {
 	if (xdg_shell_view_from_view(view) == NULL) {
 		return;
@@ -265,6 +273,7 @@ static const struct sway_view_impl view_impl = {
 	.configure = configure,
 	.set_activated = set_activated,
 	.set_tiled = set_tiled,
+	.set_maximized = set_maximized,
 	.set_fullscreen = set_fullscreen,
 	.set_resizing = set_resizing,
 	.wants_floating = wants_floating,

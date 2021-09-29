@@ -1050,6 +1050,68 @@ void container_end_mouse_operation(struct sway_container *container) {
 	}
 }
 
+static void set_maximized(struct sway_container *con, bool enable) {
+	if (!con->view) {
+		return;
+	}
+	if (con->view->impl->set_maximized) {
+		con->view->impl->set_maximized(con->view, enable);
+		if (con->view->foreign_toplevel) {
+			wlr_foreign_toplevel_handle_v1_set_maximized(
+				con->view->foreign_toplevel, enable);
+		}
+	}
+}
+
+static void container_maximize(struct sway_container *con) {
+	if (!sway_assert(!con->pending.maximized,
+				"Expected a non-maximized container")) {
+		return;
+	}
+	set_maximized(con, true);
+	con->pending.maximized = true;
+
+	con->saved_x = con->pending.x;
+	con->saved_y = con->pending.y;
+	con->saved_width = con->pending.width;
+	con->saved_height = con->pending.height;
+
+	container_end_mouse_operation(con);
+	ipc_event_window(con, "maximize");
+}
+
+
+void container_unmaximize(struct sway_container *con) {
+	if (!sway_assert(con->pending.maximized,
+				"Expected a maximized container")) {
+		return;
+	}
+	set_maximized(con, false);
+
+	if (container_is_floating(con)) {
+		con->pending.x = con->saved_x;
+		con->pending.y = con->saved_y;
+		con->pending.width = con->saved_width;
+		con->pending.height = con->saved_height;
+	}
+
+	con->pending.maximized = false;
+	container_end_mouse_operation(con);
+	ipc_event_window(con, "maximized");
+}
+
+void container_set_maximized(struct sway_container *con,
+		bool maximized) {
+	if (con->pending.maximized == maximized) {
+		return;
+	}
+	if (maximized) {
+		container_maximize(con);
+	} else {
+		container_unmaximize(con);
+	}
+}
+
 static void set_fullscreen(struct sway_container *con, bool enable) {
 	if (!con->view) {
 		return;

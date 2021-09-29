@@ -308,6 +308,18 @@ void view_autoconfigure(struct sway_view *view) {
 		}
 	}
 
+	if (con->pending.maximized) {
+		struct sway_workspace *ws = con->pending.workspace;
+		struct sway_output *output = ws ? ws->output : NULL;
+		if (output) {
+			struct wlr_box *box = &output->usable_area;
+			con->pending.x = box->x;
+			con->pending.y = box->y;
+			con->pending.width = box->width;
+			con->pending.height = box->height;
+		}
+	}
+
 	double x, y, width, height;
 	switch (con->pending.border) {
 	default:
@@ -648,6 +660,43 @@ static void handle_foreign_activate_request(
 	transaction_commit_dirty();
 }
 
+static void handle_foreign_maximize_request(
+		struct wl_listener *listener, void *data) {
+	struct sway_view *view = wl_container_of(
+			listener, view, foreign_maximize_request);
+	struct wlr_foreign_toplevel_handle_v1_maximized_event *event = data;
+
+	//TODO: is this necessary?
+	// Match fullscreen command behavior for scratchpad hidden views
+	struct sway_container *container = view->container;
+	if (!container->pending.workspace) {
+		while (container->pending.parent) {
+			container = container->pending.parent;
+		}
+	}
+
+	/*if (event->maximize && event->output && event->output->data) {
+		struct sway_output *output = event->output->data;
+		struct sway_workspace *ws = output_get_active_workspace(output);
+		if (ws && !container_is_scratchpad_hidden(view->container)) {
+			if (container_is_floating(view->container)) {
+				workspace_add_floating(ws, view->container);
+			} else {
+				workspace_add_tiling(ws, view->container);
+			}
+		}
+	}*/
+
+	container_set_maximized(container,
+		event->maximized);
+	if (container->pending.parent) {
+		arrange_container(container->pending.parent);
+	} else if (container->pending.workspace) {
+		arrange_workspace(container->pending.workspace);
+	}
+	transaction_commit_dirty();
+}
+
 static void handle_foreign_fullscreen_request(
 		struct wl_listener *listener, void *data) {
 	struct sway_view *view = wl_container_of(
@@ -724,6 +773,7 @@ static void handle_foreign_destroy(
 			listener, view, foreign_destroy);
 
 	wl_list_remove(&view->foreign_activate_request.link);
+	wl_list_remove(&view->foreign_maximize_request.link);
 	wl_list_remove(&view->foreign_fullscreen_request.link);
 	wl_list_remove(&view->foreign_close_request.link);
 	wl_list_remove(&view->foreign_destroy.link);
@@ -762,6 +812,9 @@ void view_map(struct sway_view *view, struct wlr_surface *wlr_surface,
 	view->foreign_activate_request.notify = handle_foreign_activate_request;
 	wl_signal_add(&view->foreign_toplevel->events.request_activate,
 			&view->foreign_activate_request);
+	view->foreign_maximize_request.notify = handle_foreign_maximize_request;
+	wl_signal_add(&view->foreign_toplevel->events.request_maximize,
+			&view->foreign_maximize_request);
 	view->foreign_fullscreen_request.notify = handle_foreign_fullscreen_request;
 	wl_signal_add(&view->foreign_toplevel->events.request_fullscreen,
 			&view->foreign_fullscreen_request);
