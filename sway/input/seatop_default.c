@@ -236,13 +236,15 @@ static void handle_tablet_tool_tip(struct sway_seat *seat,
 		}
 	} else if (cont) {
 		bool is_floating_or_child = container_is_floating_or_child(cont);
+		bool is_maximized_or_child = cont && container_is_maximized_or_child(cont);
 		bool is_fullscreen_or_child = container_is_fullscreen_or_child(cont);
 		struct wlr_keyboard *keyboard = wlr_seat_get_keyboard(seat->wlr_seat);
 		bool mod_pressed = keyboard &&
 			(wlr_keyboard_get_modifiers(keyboard) & config->floating_mod);
 
 		// Handle beginning floating move
-		if (is_floating_or_child && !is_fullscreen_or_child && mod_pressed) {
+		if (is_floating_or_child && !is_fullscreen_or_child && 
+				!is_maximized_or_child && mod_pressed) {
 			seat_set_focus_container(seat,
 				seat_get_focus_inactive_view(seat, &cont->node));
 			seatop_begin_move_floating(seat, container_toplevel_ancestor(cont));
@@ -337,6 +339,7 @@ static void handle_button(struct sway_seat *seat, uint32_t time_msec,
 		node->sway_container : NULL;
 	bool is_floating = cont && container_is_floating(cont);
 	bool is_floating_or_child = cont && container_is_floating_or_child(cont);
+	bool is_maximized_or_child = cont && container_is_maximized_or_child(cont);
 	bool is_fullscreen_or_child = cont && container_is_fullscreen_or_child(cont);
 	enum wlr_edges edge = cont ? find_edge(cont, surface, cursor) : WLR_EDGE_NONE;
 	enum wlr_edges resize_edge = cont && edge ?
@@ -429,6 +432,7 @@ static void handle_button(struct sway_seat *seat, uint32_t time_msec,
 
 	// Handle beginning floating move
 	if (cont && is_floating_or_child && !is_fullscreen_or_child &&
+			!is_maximized_or_child &&
 			state == WLR_BUTTON_PRESSED) {
 		uint32_t btn_move = config->floating_mod_inverse ? BTN_RIGHT : BTN_LEFT;
 		if (button == btn_move && (mod_pressed || on_titlebar)) {
@@ -441,6 +445,7 @@ static void handle_button(struct sway_seat *seat, uint32_t time_msec,
 
 	// Handle beginning floating resize
 	if (cont && is_floating_or_child && !is_fullscreen_or_child &&
+			!is_maximized_or_child &&
 			state == WLR_BUTTON_PRESSED) {
 		// Via border
 		if (button == BTN_LEFT && resize_edge != WLR_EDGE_NONE) {

@@ -1295,6 +1295,17 @@ bool container_is_floating_or_child(struct sway_container *container) {
 	return container_is_floating(container_toplevel_ancestor(container));
 }
 
+bool container_is_maximized_or_child(struct sway_container *container) {
+	do {
+		if (container->pending.maximized) {
+			return true;
+		}
+		container = container->pending.parent;
+	} while (container);
+
+	return false;
+}
+
 bool container_is_fullscreen_or_child(struct sway_container *container) {
 	do {
 		if (container->pending.fullscreen_mode) {

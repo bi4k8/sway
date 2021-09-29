@@ -282,6 +282,12 @@ struct sway_container *container_toplevel_ancestor(
 bool container_is_floating_or_child(struct sway_container *container);
 
 /**
+ * Return true if the container is maximized, or a child of a maximized split
+ * container.
+ */
+bool container_is_maximized_or_child(struct sway_container *container);
+
+/**
  * Return true if the container is fullscreen, or a child of a fullscreen split
  * container.
  */
