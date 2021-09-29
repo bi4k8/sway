@@ -1071,10 +1071,17 @@ static void container_maximize(struct sway_container *con) {
 	set_maximized(con, true);
 	con->pending.maximized = true;
 
-	con->saved_x = con->pending.x;
-	con->saved_y = con->pending.y;
-	con->saved_width = con->pending.width;
-	con->saved_height = con->pending.height;
+	if (con->pending.fullscreen_mode == FULLSCREEN_NONE) {
+		con->unmaximized_x = con->pending.x;
+		con->unmaximized_y = con->pending.y;
+		con->unmaximized_width = con->pending.width;
+		con->unmaximized_height = con->pending.height;
+	} else {
+		con->unmaximized_x = con->saved_x;
+		con->unmaximized_y = con->saved_y;
+		con->unmaximized_width = con->saved_width;
+		con->unmaximized_height = con->saved_height;
+	}
 
 	container_end_mouse_operation(con);
 	ipc_event_window(con, "maximize");
@@ -1089,10 +1096,10 @@ void container_unmaximize(struct sway_container *con) {
 	set_maximized(con, false);
 
 	if (container_is_floating(con)) {
-		con->pending.x = con->saved_x;
-		con->pending.y = con->saved_y;
-		con->pending.width = con->saved_width;
-		con->pending.height = con->saved_height;
+		con->pending.x = con->unmaximized_x;
+		con->pending.y = con->unmaximized_y;
+		con->pending.width = con->unmaximized_width;
+		con->pending.height = con->unmaximized_height;
 	}
 
 	con->pending.maximized = false;
@@ -1133,10 +1140,17 @@ static void container_fullscreen_workspace(struct sway_container *con) {
 	set_fullscreen(con, true);
 	con->pending.fullscreen_mode = FULLSCREEN_WORKSPACE;
 
-	con->saved_x = con->pending.x;
-	con->saved_y = con->pending.y;
-	con->saved_width = con->pending.width;
-	con->saved_height = con->pending.height;
+	if (con->pending.maximized) {
+		con->saved_x = con->unmaximized_x;
+		con->saved_y = con->unmaximized_y;
+		con->saved_width = con->unmaximized_width;
+		con->saved_height = con->unmaximized_height;
+	} else {
+		con->saved_x = con->pending.x;
+		con->saved_y = con->pending.y;
+		con->saved_width = con->pending.width;
+		con->saved_height = con->pending.height;
+	}
 
 	if (con->pending.workspace) {
 		con->pending.workspace->fullscreen = con;

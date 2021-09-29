@@ -88,6 +88,10 @@ struct sway_container {
 	double saved_x, saved_y;
 	double saved_width, saved_height;
 
+	// Like saved_* but separate storage for maximized state
+	double unmaximized_x, unmaximized_y;
+	double unmaximized_width, unmaximized_height;
+
 	// Used when the view changes to CSD unexpectedly. This will be a non-B_CSD
 	// border which we use to restore when the view returns to SSD.
 	enum sway_container_border saved_border;
